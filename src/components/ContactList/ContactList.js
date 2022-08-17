@@ -1,32 +1,33 @@
 import PropTypes from 'prop-types';
 import css from './ContactList.module.css';
 import ContactItem from 'components/ContactItem';
+import { useSelector } from 'react-redux';
+import { getContactList } from 'redux/contactsSlice';
+import { getFilter } from 'redux/filterSlice';
 
-const ContactList = ({ availableContacts, dltContact }) => {
-   return (
-      <ul className={css.list}>
-         {availableContacts.map(({ id, name, number }) => (
-            <ContactItem
-               key={id}
-               id={id}
-               name={name}
-               number={number}
-               dltContact={dltContact}
-            />
-         ))}
-      </ul>
-   );
-};
+const ContactList = () => {
+  const contacts = useSelector(getContactList);
+  const filter = useSelector(getFilter);
 
-ContactList.propTypes = {
-   availableContacts: PropTypes.arrayOf(
-      PropTypes.shape({
-         id: PropTypes.string.isRequired,
-         name: PropTypes.string.isRequired,
-         number: PropTypes.string.isRequired,
-      }).isRequired
-   ).isRequired,
-   dltContact: PropTypes.func.isRequired,
+  function getAvailableContacts() {
+    if (filter === '') {
+      return contacts;
+    }
+    const normalizedFilter = filter.toLocaleLowerCase();
+    return contacts.filter(contact =>
+      contact.name.toLocaleLowerCase().includes(normalizedFilter)
+    );
+  }
+
+  const filteredContacts = getAvailableContacts();
+
+  return (
+    <ul className={css.list}>
+      {filteredContacts.map(({ id, name, number }) => (
+        <ContactItem key={id} id={id} name={name} number={number} />
+      ))}
+    </ul>
+  );
 };
 
 export default ContactList;

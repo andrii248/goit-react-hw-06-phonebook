@@ -1,41 +1,51 @@
 import React, { useState } from 'react';
-import PropTypes from 'prop-types';
 import css from './ContactForm.module.css';
 import { nanoid } from 'nanoid';
+import { useSelector, useDispatch } from 'react-redux';
+import { addContact, getContactList } from 'redux/contactsSlice';
 
-const INITIAL_STATE = {
-  name: '',
-  number: '',
-};
+export default function ContactForm() {
+  const [number, setNumber] = useState('');
+  const [name, setName] = useState('');
 
-export default function ContactForm({ onSubmit, checkNewContact }) {
-  const [{ name, number }, setState] = useState(INITIAL_STATE);
+  const dispatch = useDispatch();
+  const contacts = useSelector(getContactList);
 
-  const onChange = e => {
+  const handleChange = e => {
     const { name, value } = e.target;
-    setState(prevState => ({ ...prevState, [name]: value }));
+    if (name === 'name') {
+      setName(value);
+    }
+    if (name === 'number') {
+      setNumber(value);
+    }
   };
 
   const onSubmitForm = e => {
     e.preventDefault();
-    const newContact = {
-      name,
-      number,
-      id: String(nanoid(4)),
-    };
-    if (checkNewContact(newContact)) {
+    if (
+      contacts.find(
+        contact => contact.name.toLocaleLowerCase() === name.toLocaleLowerCase()
+      )
+    ) {
+      alert(name + ' is already available in Contact List');
       return;
     }
-    onSubmit(newContact);
-    setState(INITIAL_STATE);
+
+    dispatch(addContact({ name, number, id: String(nanoid(4)) }));
+    resetForm();
   };
 
+  const resetForm = () => {
+    setName('');
+    setNumber('');
+  };
   return (
     <form className={css.form} onSubmit={onSubmitForm}>
       <label className={css.label}>
         Name
         <input
-          onChange={onChange}
+          onChange={handleChange}
           type="text"
           name="name"
           value={name}
@@ -47,7 +57,7 @@ export default function ContactForm({ onSubmit, checkNewContact }) {
       <label className={css.label}>
         Number
         <input
-          onChange={onChange}
+          onChange={handleChange}
           type="tel"
           name="number"
           value={number}
@@ -60,8 +70,3 @@ export default function ContactForm({ onSubmit, checkNewContact }) {
     </form>
   );
 }
-
-ContactForm.propTypes = {
-  onSubmit: PropTypes.func.isRequired,
-  checkNewContact: PropTypes.func.isRequired,
-};
